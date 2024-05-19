@@ -39,3 +39,10 @@ class LlmChatAgent:
         self.model = model
         self.reset()
 
+    def list_models(self):
+        try:
+            models = self.client.models.list()
+            model_names = [model.id for model in models.data]
+            return model_names
+        except Exception as e:
+            return None
