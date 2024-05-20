@@ -37,7 +37,6 @@ class LlmChatAgent:
     # Function to set the model
     def set_model(self, model):
         self.model = model
-        self.reset()
 
     def list_models(self):
         try:
