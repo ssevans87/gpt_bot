@@ -2,7 +2,7 @@ import openai
 
 class LlmChatAgent:
 
-    def __init__(self, model="gpt-3.5-turbo", api_key=None):
+    def __init__(self, model="gpt-4o", api_key=None):
         if api_key:
             print(f"Key : {api_key}")
         self.client = openai.OpenAI(api_key=api_key)
