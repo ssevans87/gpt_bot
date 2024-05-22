@@ -1,12 +1,11 @@
 import streamlit as st
-from llm_agent import LlmChatAgent
+from openai import OpenAI
 
-st.set_page_config(layout="wide")
-# Initialize or reset the main text and input text in the session state
-if 'main_text' not in st.session_state:
-    st.session_state['main_text'] = ""
-if 'input_text' not in st.session_state:
-    st.session_state['input_text'] = ""
+
+
+
+
+st.title("ChatGPT-like clone")
 
 if 'key' not in st.session_state or not st.session_state['key']:
     with st.form("key_form"):
@@ -15,44 +14,43 @@ if 'key' not in st.session_state or not st.session_state['key']:
         if submitted and key_input:
             st.session_state['key'] = key_input
             st.experimental_rerun()
-
-
 else:
-    if 'bot' not in st.session_state or not st.session_state['bot']:
-        st.session_state['bot'] = LlmChatAgent(model="gpt-4-0125-preview", api_key=st.session_state['key'])
+    if 'client' not in st.session_state or not st.session_state['client']:
+        st.session_state['client'] = OpenAI(api_key=st.session_state['key'])
 
-    models = st.session_state['bot'].list_models()
-    if models is None:
-        st.session_state['key'] = None
-        st.session_state['bot'] = None
-        st.error("Invalid key. Please try again.")
-        st.experimental_rerun()
-    else:
-        model_selected = st.selectbox("Select a model", models)
-        st.session_state['bot'].set_model(model_selected)
-        def submit_text():
-            """Append the input text to the main text."""
-            if st.session_state.input_text:  # Check if there's any input text
-                st.session_state.main_text = st.session_state.bot.converse(st.session_state.input_text)
-                st.session_state.input_text = ""  # Clear the input box after submitting
-
-        def reset_text():
-            """Clear both the main text and the input box."""
-            st.session_state.main_text = ""
-            st.session_state.input_text = ""
-            st.session_state['bot'] = LlmChatAgent(model="gpt-4-0125-preview")
-
-        # Using the full page layout to maximize space utilization
+    if "openai_models" not in st.session_state:
+        try:
+            models = st.session_state['client'].models.list()
+            st.session_state["openai_models"] = [model.id for model in models.data]
+        except Exception as e:
+            st.session_state['client'] = None
+            st.session_state['key'] = None
+            st.session_state["openai_models"] = None
+            st.experimental_rerun()
 
 
-        # Main text box displayed on the top
-        st.text_area("Main Text Box", value=st.session_state['main_text'], height=800, key='main_text_area', disabled=True)
+    st.session_state["openai_model"] = st.selectbox("Select a model", st.session_state["openai_models"])
 
-        # Smaller input box (10 lines tall) on the bottom
-        st.text_area("Input Text Box", value=st.session_state['input_text'], height=200, key='input_text', max_chars=None)
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-        col1, col2 = st.columns(2)
-        with col1:
-            submit_button = st.button("Submit", on_click=submit_text)
-        with col2:
-            reset_button = st.button("Reset", on_click=reset_text)
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if prompt := st.chat_input("What is up?"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            stream = st.session_state['client'].chat.completions.create(
+                model=st.session_state["openai_model"],
+                messages=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ],
+                stream=True,
+            )
+            response = st.write_stream(stream)
+        st.session_state.messages.append({"role": "assistant", "content": response})
