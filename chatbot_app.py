@@ -5,7 +5,7 @@ from openai import OpenAI
 
 
 
-st.title("ChatGPT-like clone")
+st.title("ChatGPT Chatbot")
 
 if 'key' not in st.session_state or not st.session_state['key']:
     with st.form("key_form"):
@@ -28,8 +28,13 @@ else:
             st.session_state["openai_models"] = None
             st.experimental_rerun()
 
+    # Find the index of the default value
+    try:
+        default_index = st.session_state["openai_models"].index("gpt-4o")
+    except ValueError:
+        default_index = 0
 
-    st.session_state["openai_model"] = st.selectbox("Select a model", st.session_state["openai_models"])
+    st.session_state["openai_model"] = st.selectbox("Select a model", st.session_state["openai_models"], index=default_index)
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
