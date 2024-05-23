@@ -2,8 +2,6 @@ import streamlit as st
 from openai import OpenAI
 import json
 
-st.title("ChatGPT Chatbot")
-
 # Ensure 'key' and 'client' are set up
 if 'key' not in st.session_state or not st.session_state['key']:
     with st.form("key_form"):
@@ -109,9 +107,9 @@ else:
         # Convert threads to JSON for download
         threads_json = json.dumps(st.session_state.threads, indent=4)
         st.sidebar.download_button(
-            label="Download All Conversations as JSON",
+            label="Store Conversation",
             data=threads_json,
-            file_name='conversations.json',
+            file_name='gpt_conversations.json',
             mime='application/json'
         )
 
