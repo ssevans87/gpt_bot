@@ -32,9 +32,6 @@ else:
     except ValueError:
         default_index = 0
 
-    # Dropdown to select a model
-    st.session_state["openai_model"] = st.selectbox("Select a model", st.session_state["openai_models"], index=default_index)
-
     # Initialize threads and current_thread if not already set
     if "threads" not in st.session_state:
         st.session_state.threads = {"Thread1": {"title": "Thread1", "messages": []}}
@@ -46,9 +43,27 @@ else:
     if "file_loaded" not in st.session_state:
         st.session_state.file_loaded = False
 
-    # Sidebar for selecting and adding threads
-    st.sidebar.title("Conversation Threads")
+    # Sidebar for selecting model and threads
+    st.sidebar.title("Current conversation")
+
+    thread = st.session_state.threads[st.session_state.current_thread]
+    new_title = st.sidebar.text_input("Thread Title", value=thread["title"])
+    st.session_state["openai_model"] = st.sidebar.selectbox("Select a model", st.session_state["openai_models"], index=default_index)
+
+    st.sidebar.title("Thread Management")
     selected_thread = st.sidebar.selectbox("Select a thread", options=list(st.session_state.threads.keys()), index=list(st.session_state.threads.keys()).index(st.session_state.current_thread))
+
+    # Editable title in sidebar
+
+    if new_title != thread["title"]:
+        if new_title not in st.session_state.threads:
+            st.session_state.threads.pop(thread["title"])
+            thread["title"] = new_title
+            st.session_state.threads[new_title] = thread
+            st.session_state.current_thread = new_title
+            st.experimental_rerun()  # Reload the app with the updated title
+        else:
+            st.sidebar.error("Thread title must be unique!")  # Show error if the new title is not unique
 
     # Input and button to add a new thread
     new_thread_title = st.sidebar.text_input("New thread title")
@@ -79,18 +94,6 @@ else:
     if st.session_state.current_thread:
         thread = st.session_state.threads[st.session_state.current_thread]
 
-        # Editable title
-        new_title = st.text_input("Title", value=thread["title"])
-        if new_title != thread["title"]:
-            if new_title not in st.session_state.threads:
-                st.session_state.threads.pop(thread["title"])
-                thread["title"] = new_title
-                st.session_state.threads[new_title] = thread
-                st.session_state.current_thread = new_title
-                st.experimental_rerun()  # Reload the app with the updated title
-            else:
-                st.error("Thread title must be unique!")  # Show error if the new title is not unique
-
         # Display messages
         for message in thread["messages"]:
             with st.chat_message(message["role"]):
@@ -119,9 +122,10 @@ else:
             thread["messages"].append({"role": "assistant", "content": response})
 
         # Convert threads to JSON for download
+        st.sidebar.title("Save Conversation")
         threads_json = json.dumps(st.session_state.threads, indent=4)
         st.sidebar.download_button(
-            label="Store Conversation",
+            label="Save",
             data=threads_json,
             file_name='gpt_conversations.json',
             mime='application/json'
