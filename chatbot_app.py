@@ -28,7 +28,7 @@ else:
 
     # Find the index of the default model
     try:
-        default_index = st.session_state["openai_models"].index("gpt-4")
+        default_index = st.session_state["openai_models"].index("gpt-4o")
     except ValueError:
         default_index = 0
 
