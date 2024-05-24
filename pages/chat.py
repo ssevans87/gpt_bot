@@ -28,13 +28,16 @@ else:
 
     # Find the index of the default model
     try:
-        default_index = st.session_state["openai_models"].index("gpt-4o")
+        default_index = st.session_state["openai_models"].index("gpt-4")
     except ValueError:
         default_index = 0
 
     # Initialize threads and current_thread if not already set
     if "threads" not in st.session_state:
-        st.session_state.threads = {"Thread1": {"title": "Thread1", "messages": []}}
+        if "json_data" in st.session_state:
+            st.session_state.threads = st.session_state["json_data"]
+        else:
+            st.session_state.threads = {"Thread1": {"title": "Thread1", "messages": []}}
         st.session_state.current_thread = "Thread1"
 
     if "current_thread" not in st.session_state:
