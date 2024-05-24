@@ -43,9 +43,6 @@ else:
     if "current_thread" not in st.session_state:
         st.session_state.current_thread = "Thread1"
 
-    if "file_loaded" not in st.session_state:
-        st.session_state.file_loaded = False
-
     # Sidebar for selecting model and threads
     st.sidebar.title("Current conversation")
 
@@ -59,7 +56,6 @@ else:
                         index=list(st.session_state.threads.keys()).index(st.session_state.current_thread))
 
     # Editable title in sidebar
-
     if new_title != thread["title"]:
         if new_title not in st.session_state.threads:
             st.session_state.threads.pop(thread["title"])
@@ -125,31 +121,3 @@ else:
                 )
                 response = st.write_stream(stream)
             thread["messages"].append({"role": "assistant", "content": response})
-
-        # Convert threads to JSON for download
-        st.sidebar.title("Save Conversation")
-        threads_json = json.dumps(st.session_state.threads, indent=4)
-        st.sidebar.download_button(
-            label="Save",
-            data=threads_json,
-            file_name='gpt_conversations.json',
-            mime='application/json'
-        )
-
-    # Sidebar for uploading JSON file
-    st.sidebar.title("Load Conversation")
-    uploaded_file = st.sidebar.file_uploader("Upload JSON file", type="json")
-    if uploaded_file and not st.session_state.file_loaded:
-        uploaded_threads = json.load(uploaded_file)
-        # Clear existing threads and replace with uploaded threads
-        st.session_state.threads = {}
-        for key in list(uploaded_threads.keys()):
-            unique_key = key
-            counter = 1
-            while unique_key in st.session_state.threads:
-                unique_key = f"{key}_{counter}"
-                counter += 1
-            st.session_state.threads[unique_key] = uploaded_threads[key]
-        st.session_state.current_thread = list(st.session_state.threads.keys())[0]  # Select the first thread by default
-        st.session_state.file_loaded = True
-        st.experimental_rerun()  # Reload the app with the newly loaded threads
