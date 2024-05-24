@@ -48,10 +48,12 @@ else:
 
     thread = st.session_state.threads[st.session_state.current_thread]
     new_title = st.sidebar.text_input("Thread Title", value=thread["title"])
-    st.session_state["openai_model"] = st.sidebar.selectbox("Select a model", st.session_state["openai_models"], index=default_index)
+    st.session_state["openai_model"] = st.sidebar.selectbox("Select a model", st.session_state["openai_models"],
+                                                            index=default_index)
 
     st.sidebar.title("Thread Management")
-    selected_thread = st.sidebar.selectbox("Select a thread", options=list(st.session_state.threads.keys()), index=list(st.session_state.threads.keys()).index(st.session_state.current_thread))
+    selected_thread = st.sidebar.selectbox("Select a thread", options=list(st.session_state.threads.keys()),
+                        index=list(st.session_state.threads.keys()).index(st.session_state.current_thread))
 
     # Editable title in sidebar
 
