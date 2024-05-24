@@ -28,7 +28,7 @@ else:
 
     # Find the index of the default model
     try:
-        default_index = st.session_state["openai_models"].index("gpt-4o")
+        default_index = st.session_state["openai_models"].index("gpt-4")
     except ValueError:
         default_index = 0
 
@@ -65,6 +65,16 @@ else:
     if selected_thread:
         st.session_state.current_thread = selected_thread
 
+    # Function to count tokens in messages
+    def count_tokens(messages):
+        return sum(len(m["content"].split()) for m in messages)
+
+    # Function to prune messages if token limit is exceeded
+    def prune_messages(messages, max_tokens):
+        while count_tokens(messages) > max_tokens:
+            messages.pop(0)
+        return messages
+
     # Display and update the current thread
     if st.session_state.current_thread:
         thread = st.session_state.threads[st.session_state.current_thread]
@@ -92,12 +102,16 @@ else:
             with st.chat_message("user"):
                 st.markdown(prompt)
 
+            # Create a pruned version of messages for API call
+            max_tokens = 4096  # Adjust based on the specific model's token limit
+            pruned_messages = prune_messages(thread["messages"][:], max_tokens)  # Use a copy of the messages list
+
             with st.chat_message("assistant"):
                 stream = st.session_state['client'].chat.completions.create(
                     model=st.session_state["openai_model"],
                     messages=[
                         {"role": m["role"], "content": m["content"]}
-                        for m in thread["messages"]
+                        for m in pruned_messages
                     ],
                     stream=True,
                 )
