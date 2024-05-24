@@ -1,20 +1,28 @@
 import streamlit as st
 import json
+from firebase_admin import db
 
 st.title("Settings")
 
-# Save Conversations
+# Function to save threads to Firebase
+def save_threads_to_db():
+    try:
+        user_id = st.session_state.get("user_id")
+        if user_id and "threads" in st.session_state:
+            ref = db.reference(f'users/{user_id}')
+            threads_json = json.dumps(st.session_state.threads)
+            ref.update({"json_data": threads_json})
+            st.success("Conversations saved to database.")
+            st.write(f"Saved threads: {threads_json}")  # Log the saved threads for debugging
+        else:
+            st.error("User ID or threads not found in session state.")
+    except Exception as e:
+        st.error(f"Failed to save conversations: {str(e)}")
+
+# Save Conversations manually
 st.sidebar.title("Save Conversation")
-if "threads" in st.session_state:
-    threads_json = json.dumps(st.session_state.threads, indent=4)
-    st.sidebar.download_button(
-        label="Save",
-        data=threads_json,
-        file_name='gpt_conversations.json',
-        mime='application/json'
-    )
-else:
-    st.sidebar.warning("No conversations to save.")
+if st.sidebar.button("Save to Database"):
+    save_threads_to_db()
 
 # Load Conversations
 st.sidebar.title("Load Conversation")

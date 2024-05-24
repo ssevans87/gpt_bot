@@ -1,6 +1,8 @@
 import streamlit as st
 from openai import OpenAI
 import json
+from firebase_admin import db
+import components.unload_event as unload_event
 
 # Ensure 'key' and 'client' are set up
 if 'key' not in st.session_state or not st.session_state['key']:
@@ -121,3 +123,22 @@ else:
                 )
                 response = st.write_stream(stream)
             thread["messages"].append({"role": "assistant", "content": response})
+
+    # Integrate the unload event handler
+    unload_event.unload_event()
+
+    # JavaScript to call the save function
+    save_js = """
+    <script>
+    document.addEventListener("saveThreads", function () {
+        fetch("/save_threads", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        });
+    });
+    </script>
+    """
+    st.components.v1.html(save_js, height=0, width=0)
